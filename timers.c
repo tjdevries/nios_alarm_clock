@@ -52,3 +52,21 @@ void init_timer_1(volatile int *half_second_int_ptr) {
 void stop_timer_1() {
 	IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_1_BASE, 0x0);
 }
+
+//set timer to quicker speed for testing
+//only for timer 0 for now
+void speed_up(){
+	IOWR_ALTERA_AVALON_TIMER_PERIODH(TIMER_0_BASE, 0x0001);
+	IOWR_ALTERA_AVALON_TIMER_PERIODL(TIMER_0_BASE, 0x4585);	
+	IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_0_BASE, 0x7);
+	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_1_BASE, 0);
+}
+
+//slow down timer back to original speed
+//only for timer 0 for now
+void slow_down(){
+	IOWR_ALTERA_AVALON_TIMER_PERIODH(TIMER_0_BASE, 0x004C);
+	IOWR_ALTERA_AVALON_TIMER_PERIODL(TIMER_0_BASE, 0x4B40);
+	IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_0_BASE, 0x7);
+	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_1_BASE, 0);
+}

@@ -149,6 +149,11 @@ int main(void)
 	/* Initialize the character display */
 	alt_up_character_lcd_init(char_lcd_dev);
 	
+	// Initialize the switches
+	int * sw_ptr = (int *) SW_BASE;
+	int sw_values;
+	int oldvalue = 0x00000000;
+	int MASK = 0x00020000;
 	
 	// Initialize the Timers
 	init_timer_0(&tenths);
@@ -188,6 +193,16 @@ int main(void)
 				// Turn off timer.
 				stop_timer_1();
 			}
+		}
+		
+		// Check SW17 for "Test Mode" - speed up or slow down
+		sw_values = *(sw_ptr);
+		if((sw_values & MASK) == 0x00020000 && oldvalue == 0x00000000){
+			speed_up();
+			oldvalue = sw_values & MASK;
+		} else if ((sw_values & MASK) == 0x00000000 && oldvalue == 0x00020000) { 
+			slow_down(); 
+			oldvalue = sw_values & MASK;
 		}
 		
 		// Update the clock

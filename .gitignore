@@ -31,6 +31,7 @@
 # Debug files
 *.dSYM/
 
+*BSP*.
 *.BSP*.
 *.obj*.
 *.map

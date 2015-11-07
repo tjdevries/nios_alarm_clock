@@ -8,7 +8,7 @@
 #include "hex.h"
 #include "timers.h"
 
-void update_time(char *top_row_ptr, int *old_tenths_ptr, int *tenths_ptr, int *seconds_ptr, int *minutes_ptr, int *hours_ptr, int tenths_displayed);
+char * update_time(int *old_tenths_ptr, volatile int *tenths_ptr, int *seconds_ptr, int *minutes_ptr, int *hours_ptr, int tenths_displayed);
 void update_hour();
 void update_min();
 void update_sec();

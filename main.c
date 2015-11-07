@@ -158,8 +158,21 @@ int main(void)
 		
 		// Update the clock
 		if (tenths != old_tenths) {
-			int hours;
-			update_time(&top_row, &old_tenths, &tenths, &seconds, &minutes, &hours, 0);
+			// Increment our seconds
+			if (tenths >= 10) {
+				seconds++;
+				if (seconds == 60) {
+					minutes = (minutes + 1) % 60;
+					seconds = 0;
+					top_row[0] = '0' + (minutes - (minutes % 10)) / 10;
+					top_row[1] = '0' + minutes % 10;
+				}
+				top_row[3] = '0' + (seconds - (seconds % 10)) / 10;
+				top_row[4] = '0' + seconds % 10;
+				tenths = 0;
+			}
+			old_tenths = tenths;
+			top_row[6] = '0' + tenths;
 			alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 			alt_up_character_lcd_string(char_lcd_dev, top_row);
 		}

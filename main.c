@@ -4,6 +4,11 @@
 #include <stdio.h>
 #include "BSP/system.h"
 
+// Personal includes
+#include "hex.h"
+#include "timers.h"
+#include "util.h"
+
 // Initialize the LCD
 alt_up_character_lcd_dev * char_lcd_dev;
 
@@ -20,7 +25,8 @@ volatile int tenths = 0;
 volatile int half_second = 0;
 
 // The tops and bottom rows of the display.
-char top_row[17] = "00:00.0";
+//					hh:mm:ss
+char top_row[17] = "    12:00:00    ";
 char bot_row[17];
 
 /* Functions used for updating displays */
@@ -28,7 +34,7 @@ char bot_row[17];
 // For the Key 1 press
 void reset_display() {
 	// Clear the top row
-	strcpy(top_row, "00:00.0");
+	strcpy(top_row, "    12:00:00    ");
 	alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 	alt_up_character_lcd_string(char_lcd_dev, top_row);
 	
@@ -49,50 +55,6 @@ void write_current_time_to_bot_row() {
 	alt_up_character_lcd_string(char_lcd_dev, top_row);
 }
 
-/*		Timer setups 		*/
-void timer0_isr(void * context, alt_32 id) {
-	volatile int* contextTimerPtr = (volatile int*) context;
-	*contextTimerPtr = *contextTimerPtr + 1;
-	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_0_BASE, 0x0);
-}
-
-void init_timer_0() {
-	// Timer base is TIMER_0_BASE
-	// Timer clock is 50,000,000 so to increment a counter, move it every 5,000,000 ticks.
-	// high 0x004C
-	// low 0x4B40
-	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_0_BASE, 0);
-	// Used to use ALTERA_AVALON_TIMER_CONTROL_START_MSK, not sure which I need	
-	IOWR_ALTERA_AVALON_TIMER_PERIODH(TIMER_0_BASE, 0x004C);
-	IOWR_ALTERA_AVALON_TIMER_PERIODL(TIMER_0_BASE, 0x4B40);
-	IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_0_BASE, 0x7);
-	
-	void* tenths_ptr = (void *) &tenths;
-	// Register the ISR. 
-	alt_irq_register(TIMER_0_IRQ, tenths_ptr, timer0_isr);
-}
-
-void timer1_isr(void * context, alt_32 id) {
-	volatile int* contextTimerPtr = (volatile int*) context;
-	*contextTimerPtr = *contextTimerPtr + 1;
-	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_1_BASE, 0x0);
-}
-
-void init_timer_1() {
-	// Timer base is TIMER_1_BASE
-	// Timer clock is 50,000,000 so to increment a counter every half second, move it every 50,000,000/2 ticks.
-	// high 0x017D
-	// low 0x7840
-	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_1_BASE, 0);
-	// Used to use ALTERA_AVALON_TIMER_CONTROL_START_MSK, not sure which I need	
-	IOWR_ALTERA_AVALON_TIMER_PERIODH(TIMER_1_BASE, 0x017D);
-	IOWR_ALTERA_AVALON_TIMER_PERIODL(TIMER_1_BASE, 0x7840);
-	IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_1_BASE, 0x7);
-	
-	void* half_second_ptr = (void *) &half_second;
-	// Register the ISR. 
-	alt_irq_register(TIMER_1_IRQ, half_second_ptr, timer1_isr);
-}
 
 /*		Key Setups 		*/
 static void handle_button_interrupts(void* context, alt_u32 id)
@@ -127,7 +89,7 @@ static void init_button_pio()
 }
 
 /* Our function that handles the key presses */
-void handle_key_press(current_row) {
+void handle_key_press() {
 	// Key 1
 	if (edge_capture == 2) {
 		reset_display();
@@ -139,7 +101,7 @@ void handle_key_press(current_row) {
 	// Key 3
 	else if (edge_capture == 8) {
 		half_second = 1;
-		init_timer_1();
+		init_timer_1(&half_second);
 	}
 	
 	// Reset our edge capture back to 0
@@ -155,7 +117,7 @@ int main(void)
 	
 	
 	// Initialize the Timers
-	init_timer_0();
+	init_timer_0(&tenths);
 	
 	// Tracker to see when the time changes
 	int old_tenths = 0;
@@ -170,7 +132,7 @@ int main(void)
 		
 		// Handle if a key was pressed
 		if (edge_capture) {
-			handle_key_press(top_row);
+			handle_key_press();
 		}
 		
 		// Flash on and off our displays
@@ -178,42 +140,26 @@ int main(void)
 			// Odd numbers
 			if (half_second % 2) {
 				// Turn hex on
-				IOWR_ALTERA_AVALON_PIO_DATA(SEVENSEG30_BASE, 0xFFFFFFFF);
-				IOWR_ALTERA_AVALON_PIO_DATA(SEVENSEG74_BASE, 0xFFFFFFFF);
+				hex_on();
 			}
 			else {
 				// Turn hex off
-				IOWR_ALTERA_AVALON_PIO_DATA(SEVENSEG30_BASE, 0x00000000);
-				IOWR_ALTERA_AVALON_PIO_DATA(SEVENSEG74_BASE, 0x00000000);
+				hex_off();
 			}
 			
 			if (half_second == 7) {
 				half_second = 0;
 				// Turn hex off
-				IOWR_ALTERA_AVALON_PIO_DATA(SEVENSEG30_BASE, 0x00000000);
-				IOWR_ALTERA_AVALON_PIO_DATA(SEVENSEG74_BASE, 0x00000000);
+				hex_off();
 				// Turn off timer.
-				IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_1_BASE, 0x0);
+				stop_timer_1();
 			}
 		}
 		
 		// Update the clock
 		if (tenths != old_tenths) {
-			// Increment our seconds
-			if (tenths >= 10) {
-				seconds++;
-				if (seconds == 60) {
-					minutes = (minutes + 1) % 60;
-					seconds = 0;
-					top_row[0] = '0' + (minutes - (minutes % 10)) / 10;
-					top_row[1] = '0' + minutes % 10;
-				}
-				top_row[3] = '0' + (seconds - (seconds % 10)) / 10;
-				top_row[4] = '0' + seconds % 10;
-				tenths = 0;
-			}
-			old_tenths = tenths;
-			top_row[6] = '0' + tenths;
+			int hours;
+			update_time(&top_row, &old_tenths, &tenths, &seconds, &minutes, &hours, 0);
 			alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 			alt_up_character_lcd_string(char_lcd_dev, top_row);
 		}

@@ -13,6 +13,10 @@
         <options>
             <source_files>
                 <source_file filepath="true">main.c</source_file>
+                <source_file filepath="true">hex.h</source_file>
+                <source_file filepath="true">hex.c</source_file>
+                <source_file filepath="true">timers.c</source_file>
+                <source_file filepath="true">timers.h</source_file>
             </source_files>
             <bsp_settings_tcl_script filepath="true"/>
         </options>

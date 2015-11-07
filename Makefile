@@ -142,7 +142,10 @@ ACDS_VERSION := 13.0sp1
 ELF := H:/E_325/Lab/nios_alarm_clock/main.elf
 
 # Paths to C, C++, and assembly source files.
+C_SRCS += H:/E_325/Lab/nios_alarm_clock/hex.c
 C_SRCS += H:/E_325/Lab/nios_alarm_clock/main.c
+C_SRCS += H:/E_325/Lab/nios_alarm_clock/timers.c
+C_SRCS += H:/E_325/Lab/nios_alarm_clock/util.c
 CXX_SRCS :=
 ASM_SRCS :=
 

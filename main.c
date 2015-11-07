@@ -9,6 +9,32 @@
 #include "timers.h"
 #include "util.h"
 
+
+/*
+ * Switches:
+ *	SW17: Enables "test mode" - i.e. 1 minutes = 1 second
+ *  SW16: Enables the 24 or AM/PM mode. 0 for AM/PM, 1 for 24 Hour.
+ *	SW2 : Enables the alarm. If 0, alarm off. If 1, alarm on
+ *	SW1 : Enables modification of the alarm time. If 0, alarm not modified (i.e. is set). If 1, alarm may be modified
+ *	SW0 : Enables modification of the clock time. If 0, clock not modified (i.e. is set). If 0, clock may be modified
+ *		Note: If both switches are on, neither will be modified.
+ *
+ * Keys:
+ *	Key3: 
+ *		- When SW1 xor SW0 are 1, then it will add 1 to the current hour of the (alarm / clock) time (respectively).
+ *		- If an alarm goes off, then Key 3 snooze.
+ *	Key2:
+ * 		- When SW1 xor SW0 are 1, then it will add 1 to the current minute of the (alarm / clock) time (respectively). 
+ *	Key1:
+ *		- If alarm goes off, Key1 will turn the alarm off
+ *
+ * Hexes:
+ *	If ! alarm:
+ *		Displays the date: mm dd yyyy
+ *	If alarm:
+ *		Flash and do fun things
+ */
+ 
 // Initialize the LCD
 alt_up_character_lcd_dev * char_lcd_dev;
 
@@ -17,6 +43,7 @@ alt_up_character_lcd_dev * char_lcd_dev;
 volatile int edge_capture;
 
 // Initialize our context variable
+volatile int hours = 0;
 volatile int minutes = 0;
 volatile int seconds = 0;
 volatile int tenths = 0;

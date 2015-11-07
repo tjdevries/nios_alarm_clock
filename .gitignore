@@ -39,3 +39,4 @@ obj/
 *.map
 *.objdump
 *.srec
+Makefile

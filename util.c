@@ -41,3 +41,50 @@ void update_min() {
 void update_sec() {
 
 }
+
+void increment_date(int *month, int *day, int *year) {
+	// Used to take the date and add 1 to it.
+	//	Will handle changing the month and year if necessary.
+	/*
+	1  January	31
+	2  February	28*, 29
+	3  March	31
+	4  April	30
+	5  May	31
+	6  June	30
+	7  July	31
+	8  August	31
+	9  September	30
+	10 October	31
+	11 November	30
+	12 December	31
+	*/
+	int month_31[7] = {1, 3, 5, 7, 8, 10, 12};
+	int month_30[4] = {4, 6, 9, 11}
+	
+	if (*day < 29 ) { (*day)++; }
+	else if ( *month == 2  )
+}
+
+void is_leap_year(int year) {
+	// Returns a 1 for is a leap year, returns 0 otherwise
+	if (year % 400 == 0) {
+       return 1;
+	}
+	else if (year % 100 == 0) {
+		return 0;
+	}
+	else if (year % 4 == 0) {
+		return 1;
+	}
+	return 0;
+}
+
+void is_in_array(int val, int *arr, int size) {
+    int i;
+    for (i=0; i < size; i++) {
+        if (arr[i] == val)
+            return true;
+    }
+    return false;
+}

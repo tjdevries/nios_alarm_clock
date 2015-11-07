@@ -13,3 +13,7 @@ void update_hour();
 void update_min();
 void update_sec();
 
+void increment_date(int *month, int *day, int *year);
+void is_leap_year(int year);
+
+void is_in_array(int val, int *arr, int size)

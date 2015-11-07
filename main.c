@@ -63,6 +63,11 @@ int sec_2 = 11;
 char top_row[17] = "    12:00:00    ";
 char bot_row[17];
 
+// Variables for the date
+int month = 11;
+int day = 1;
+int year = 2015;
+
 /* Functions used for updating displays */
 
 // For the Key 1 press
@@ -207,7 +212,8 @@ int main(void)
 		
 		// Update the clock
 		if (tenths != old_tenths) {
-			hex_write_date(11, 7, 2015);
+			hex_write_date(month, day, year);
+			increment_date(&month, &day, &year);
 			// Increment our seconds
 			if (tenths >= 10) {
 				seconds++;

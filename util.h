@@ -12,3 +12,4 @@ char * update_time(int *old_tenths_ptr, volatile int *tenths_ptr, int *seconds_p
 void update_hour();
 void update_min();
 void update_sec();
+

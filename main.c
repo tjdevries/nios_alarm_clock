@@ -192,6 +192,7 @@ int main(void)
 		
 		// Update the clock
 		if (tenths != old_tenths) {
+			hex_write_date(11, 7, 2015);
 			// Increment our seconds
 			if (tenths >= 10) {
 				seconds++;

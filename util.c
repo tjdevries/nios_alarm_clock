@@ -59,11 +59,50 @@ void increment_date(int *month, int *day, int *year) {
 	11 November	30
 	12 December	31
 	*/
-	int month_31[7] = {1, 3, 5, 7, 8, 10, 12};
-	int month_30[4] = {4, 6, 9, 11}
+	// int month_31[7] = {1, 3, 5, 7, 8, 10, 12};
+	// int month_30[4] = {4, 6, 9, 11};
 	
-	if (*day < 29 ) { (*day)++; }
-	else if ( *month == 2  )
+	// All the months will let us go up to 28
+	if (*day < 28 ) { (*day)++; }
+	// Handle February... what a month
+	else if ( *month == 2 ) {
+		// If it is the 28th and a leap year, then we make it bigger
+		if (*day == 28 && is_leap_year(*year)) {
+			(*day)++;
+		}
+		// Otherwise, we always increment the month and start over.
+		else {
+			(*month)++;
+			*day = 1;
+		}
+	}
+	// Handle the 30 day months
+	else if( *month == 4 || *month == 6 || *month == 9 || *month == 11 ) {
+		if ( *day < 30 ) {
+			(*day)++;
+		}
+		else {
+			(*month)++;
+			*day = 1;
+		}
+	}
+	// Must be a 31 month
+	else {
+		if ( *day < 31 ) {
+			(*day)++;
+		}
+		else {
+			// handle December
+			if (*month == 12) {
+				(*year)++;
+				*month = 1;
+			}
+			else {
+				(*month)++;
+			}
+			*day = 1;
+		}
+	}
 }
 
 void is_leap_year(int year) {
@@ -78,13 +117,4 @@ void is_leap_year(int year) {
 		return 1;
 	}
 	return 0;
-}
-
-void is_in_array(int val, int *arr, int size) {
-    int i;
-    for (i=0; i < size; i++) {
-        if (arr[i] == val)
-            return true;
-    }
-    return false;
 }

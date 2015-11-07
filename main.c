@@ -24,6 +24,13 @@ volatile int tenths = 0;
 // Our half second counter
 volatile int half_second = 0;
 
+// The indexes used in the top_row to write the correct placement for the hours, mins and secs
+int hours_1 = 4;
+int hours_2 = 5;
+int min_1 = 7;
+int min_2 = 8;
+int sec_1 = 10;
+int sec_2 = 11;
 // The tops and bottom rows of the display.
 //					hh:mm:ss
 char top_row[17] = "    12:00:00    ";
@@ -164,15 +171,16 @@ int main(void)
 				if (seconds == 60) {
 					minutes = (minutes + 1) % 60;
 					seconds = 0;
-					top_row[0] = '0' + (minutes - (minutes % 10)) / 10;
-					top_row[1] = '0' + minutes % 10;
+					
+					// Write our minutes out to the top row
+					top_row[min_1] = '0' + (minutes - (minutes % 10)) / 10;
+					top_row[min_2] = '0' + minutes % 10;
 				}
-				top_row[3] = '0' + (seconds - (seconds % 10)) / 10;
-				top_row[4] = '0' + seconds % 10;
+				top_row[sec_1] = '0' + (seconds - (seconds % 10)) / 10;
+				top_row[sec_2] = '0' + seconds % 10;
 				tenths = 0;
 			}
 			old_tenths = tenths;
-			top_row[6] = '0' + tenths;
 			alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 			alt_up_character_lcd_string(char_lcd_dev, top_row);
 		}

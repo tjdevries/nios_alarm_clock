@@ -48,21 +48,17 @@ volatile int minutes = 40;
 volatile int seconds = 0;
 volatile int tenths = 0;
 
+// Initialize the alarm variables
+volatile int alarm_hours = 12;
+volatile int alarm_minutes = 00;
+
 // Our half second counter
 volatile int half_second = 0;
-
-// The indexes used in the top_row to write the correct placement for the hours, mins and secs
-int hours_1 = 4;
-int hours_2 = 5;
-int min_1 = 7;
-int min_2 = 8;
-int sec_1 = 10;
-int sec_2 = 11;
 
 // The tops and bottom rows of the display.
 //					hh:mm:ss
 char top_row[17] = "    12:00:00    ";
-char bot_row[17];
+char bot_row[17] = "ALR 12:00:00    ";
 
 // Variables for the date
 int month = 12;
@@ -157,27 +153,38 @@ void handle_key_press_time() {
 	edge_capture = 0;
 }
 
+void handle_key_press_alarm() {
+	// Key 2
+	if (edge_capture == 4) {
+		increment_minutes(&bot_row, &alarm_minutes);
+		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
+		alt_up_character_lcd_string(char_lcd_dev, bot_row);
+	}
+	// Key 3
+	else if (edge_capture == 8) {
+		increment_hours(&bot_row, &alarm_hours);
+		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
+		alt_up_character_lcd_string(char_lcd_dev, bot_row);
+	}
+	
+	// Reset our edge capture back to 0
+	edge_capture = 0;
+}
+
 int main(void)
 {
 	// open the Character LCD port
 	char_lcd_dev = alt_up_character_lcd_open_dev ("/dev/LCD");
 	/* Initialize the character display */
 	alt_up_character_lcd_init(char_lcd_dev);
-	// Write the initial items that we need to in to the display
-	// Write the hours back to the top_row
-	top_row[hours_1] = '0' + (hours - (hours % 10)) / 10;
-	top_row[hours_2] = '0' + hours % 10;
-	// Write the new minutes out to the display 
-	top_row[min_1] = '0' + (minutes - (minutes % 10)) / 10;
-	top_row[min_2] = '0' + minutes % 10;
-	// Write out our new seconds to the display.
-	top_row[sec_1] = '0' + (seconds - (seconds % 10)) / 10;
-	top_row[sec_2] = '0' + seconds % 10;
+
+	start(&top_row, seconds, minutes, hours);
 	
 	// Initialize the switches
 	int * sw_ptr = (int *) SW_BASE;
 	int sw_values;
 	int oldvalue = 0x00000000;
+	 // Masks for individual switches
 	int MASK_17 = 0x00020000;
 	int MASK_16 = 0x00010000;
 	int MASK_1 = 0x00000002;
@@ -247,13 +254,24 @@ int main(void)
 		}
 		
 		//Allow user to change the alarm if SW1 is up
+		if((sw_values & MASK_1) == 0x00000002){
+			alarm_modify = 1;
+			alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
+			alt_up_character_lcd_string(char_lcd_dev, bot_row);
+		}
+		else{ 
+			alarm_modify = 0;
+			alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
+			alt_up_character_lcd_string(char_lcd_dev, "                ");
+		}
+		
 		//buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
-/* 		if((sw_values & MASK_1) == 0x00000002 && clk_modify == 0){
+ 		if(alarm_modify == 1 && clk_modify == 0){
 			// Handle if a key was pressed
 			if (edge_capture) {
 				handle_key_press_alarm();
 			}
-		} */
+		}
 
 		// Check SW16 for "AM_PM" enable or "24" mode enable
 		//		If the switch is enabled, then we turn on 24 hour mode

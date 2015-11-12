@@ -1,48 +1,100 @@
 
 
-char * update_time(int *old_tenths_ptr, volatile int *tenths_ptr, int *seconds_ptr, int *minutes_ptr, int *hours_ptr, int tenths_displayed) {
-	// Set the indeces of the times we are writing out to the screen.
+void update_time(char * top_row, int *old_tenths_ptr, volatile int *tenths_ptr, int *seconds_ptr, int *minutes_ptr, int *hours_ptr, int *day, int *month, int *year, int tenths_displayed) {
+	// Set the tenths max
+	int tenths_max = 10;
+	
+	// Increment our seconds
+	if ( (*tenths_ptr) >= tenths_max) {
+		// Update the seconds
+		update_sec(top_row, seconds_ptr, minutes_ptr, hours_ptr, day, month, year);
+		
+		// Reset our tenths variable
+		(*tenths_ptr) = 0;
+	}
+	
+	// Pass our pointer through to the old tenths for time keeping
+	(*old_tenths_ptr) = (*tenths_ptr);
+	
+	// End
+	return 0;
+}
+
+void update_hour(char * top_row, int *hours_ptr, int *day, int *month, int *year) {
+	// Set the maximum hours
+	// TODO: Insert AM/PM
+	int hour_max = 13;
+
+	// Increment our hours variable
+	(*hours_ptr) = (*hours_ptr) + 1;
+	
+	// See if we have reached our max hours
+	if ((*hours_ptr) == hour_max) {
+		// Update the date
+		increment_date(day, month, year);
+		
+		// Reset hours
+		(*hours_ptr) = 1;
+	}
+	
+	// Set the places where we write the hours	
 	int hours_1 = 4;
 	int hours_2 = 5;
+	
+	// Write the hours back to the top_row
+	top_row[hours_1] = '0' + ((*hours_ptr) - ((*hours_ptr) % 10)) / 10;
+	top_row[hours_2] = '0' + (*hours_ptr) % 10;
+}
+
+void update_min(char * top_row, int *minutes_ptr, int *hours_ptr, int *day, int *month, int *year) {
+	// Set our maximum minutes
+	int min_max = 60;
+	
+	// Increment our minutes variable
+	(*minutes_ptr) = (*minutes_ptr) + 1;
+	
+	if ((*minutes_ptr) == min_max) {
+		// Update the hour
+		update_hour(top_row, hours_ptr, day, month, year);
+		
+		// Reset the minutes
+		(*minutes_ptr) = 0;
+	}
+	
+	// Set the places where we write the minutes
 	int min_1 = 7;
 	int min_2 = 8;
+	
+	// Write the new minutes out to the display 
+	top_row[min_1] = '0' + ((*minutes_ptr) - ((*minutes_ptr) % 10)) / 10;
+	top_row[min_2] = '0' + (*minutes_ptr) % 10;
+}
+
+void update_sec(char * top_row, int *seconds_ptr, int *minutes_ptr, int *hours_ptr, int *day, int *month, int *year) {
+	int sec_max = 60;
+	
+	// Increment our seconds variable
+	(*seconds_ptr) = (*seconds_ptr) + 1;
+	
+	// Check if we have incremented the seconds max
+	if ((*seconds_ptr) == sec_max) {
+		// Update the minutes
+		update_min(top_row, minutes_ptr, hours_ptr, day, month, year);
+		
+		// Reset the seconds
+		(*seconds_ptr) = 0;
+	}
+	
+	// Set the places where we write the seconds
 	int sec_1 = 10;
 	int sec_2 = 11;
 	
-	
-	char top_row[17] = "    00:00:00    ";
-	// Increment our seconds
-	if ( (*tenths_ptr) >= 10) {
-		(*seconds_ptr) = (*seconds_ptr) + 1;
-		if ((*seconds_ptr) == 60) {
-			(*minutes_ptr) = ((*minutes_ptr) + 1) % 60;
-			(*seconds_ptr) = 0;
-			// Write the new minutes out to the display 
-			top_row[min_1] = '0' + ((*minutes_ptr) - ((*minutes_ptr) % 10)) / 10;
-			top_row[min_2] = '0' + (*minutes_ptr) % 10;
-		}
-		// Write out our new seconds to the display.
-		top_row[sec_1] = '0' + ((*seconds_ptr) - ((*seconds_ptr) % 10)) / 10;
-		top_row[sec_2] = '0' + (*seconds_ptr) % 10;
-		(*tenths_ptr) = 0;
-	}
-	(*old_tenths_ptr) = (*tenths_ptr);
-	return top_row;
+	// Write out our new seconds to the display.
+	top_row[sec_1] = '0' + ((*seconds_ptr) - ((*seconds_ptr) % 10)) / 10;
+	top_row[sec_2] = '0' + (*seconds_ptr) % 10;
 }
 
-void update_hour() {
-
-}
-
-void update_min() {
-
-}
-
-void update_sec() {
-
-}
-
-void increment_date(int *month, int *day, int *year) {
+void increment_date(int *day, int *month, int *year) {
 	// Used to take the date and add 1 to it.
 	//	Will handle changing the month and year if necessary.
 	/*

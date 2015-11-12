@@ -43,8 +43,8 @@ alt_up_character_lcd_dev * char_lcd_dev;
 volatile int edge_capture;
 
 // Initialize our context variable
-volatile int hours = 0;
-volatile int minutes = 0;
+volatile int hours = 11;
+volatile int minutes = 40;
 volatile int seconds = 0;
 volatile int tenths = 0;
 
@@ -158,6 +158,16 @@ int main(void)
 	char_lcd_dev = alt_up_character_lcd_open_dev ("/dev/LCD");
 	/* Initialize the character display */
 	alt_up_character_lcd_init(char_lcd_dev);
+	// Write the initial items that we need to in to the display
+	// Write the hours back to the top_row
+	top_row[hours_1] = '0' + (hours - (hours % 10)) / 10;
+	top_row[hours_2] = '0' + hours % 10;
+	// Write the new minutes out to the display 
+	top_row[min_1] = '0' + (minutes - (minutes % 10)) / 10;
+	top_row[min_2] = '0' + minutes % 10;
+	// Write out our new seconds to the display.
+	top_row[sec_1] = '0' + (seconds - (seconds % 10)) / 10;
+	top_row[sec_2] = '0' + seconds % 10;
 	
 	// Initialize the switches
 	int * sw_ptr = (int *) SW_BASE;
@@ -231,24 +241,10 @@ int main(void)
 		
 		// Update the clock
 		if (tenths != old_tenths) {
-			// Increment our seconds
-			if (tenths >= 10) {
-				hex_write_date(month, day, year);
-				increment_date(&month, &day, &year);
-				seconds++;
-				if (seconds == 60) {
-					minutes = (minutes + 1) % 60;
-					seconds = 0;
-					
-					// Write our minutes out to the top row
-					top_row[min_1] = '0' + (minutes - (minutes % 10)) / 10;
-					top_row[min_2] = '0' + minutes % 10;
-				}
-				top_row[sec_1] = '0' + (seconds - (seconds % 10)) / 10;
-				top_row[sec_2] = '0' + seconds % 10;
-				tenths = 0;
-			}
-			old_tenths = tenths;
+			// Call the util.h function to update the time
+			update_time(top_row, &old_tenths, &tenths, &seconds, &minutes, &hours, &day, &month, &year, 0);
+
+			// Write the updated time to the display
 			alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 			alt_up_character_lcd_string(char_lcd_dev, top_row);
 		}

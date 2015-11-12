@@ -13,6 +13,10 @@ void update_hour();
 void update_min();
 void update_sec();
 
+void increment_hours(char *time, int *hours);
+void increment_minutes(char *time, int *minutes);
+void increment_seconds(char *time, int *seconds);
+
 void increment_date(int *month, int *day, int *year);
 void is_leap_year(int year);
 

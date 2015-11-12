@@ -30,6 +30,24 @@ char * update_time(int *old_tenths_ptr, volatile int *tenths_ptr, int *seconds_p
 	return top_row;
 }
 
+void increment_hours(char *time, int *hours){
+	(*hours) = (*hours + 1) % 12;
+	time[4] = '0' + (*hours - (*hours % 10)) / 10; 
+	time[5] = '0' + *hours % 10;
+}
+
+void increment_minutes(char *time, int *minutes){
+	(*minutes) = (*minutes + 1) % 60;
+	time[7] = '0' + (*minutes - (*minutes % 10)) / 10;
+	time[8] = '0' + *minutes % 10;
+}
+
+void increment_seconds(char *time, int *seconds){
+	(*seconds) = (*seconds + 1) % 60;
+	time[10] = '0' + (*seconds - (*seconds % 10)) / 10;
+	time[11] = '0' + *seconds % 10;
+}
+
 void update_hour() {
 
 }

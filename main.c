@@ -16,7 +16,7 @@
  *  SW16: Enables the 24 or AM/PM mode. 0 for AM/PM, 1 for 24 Hour.
  *	SW2 : Enables the alarm. If 0, alarm off. If 1, alarm on
  *	SW1 : Enables modification of the alarm time. If 0, alarm not modified (i.e. is set). If 1, alarm may be modified
- *	SW0 : Enables modification of the clock time. If 0, clock not modified (i.e. is set). If 0, clock may be modified
+ *	SW0 : Enables modification of the clock time. If 0, clock not modified (i.e. is set). If 1, clock may be modified
  *		Note: If both switches are on, neither will be modified.
  *
  * Keys:
@@ -128,19 +128,24 @@ static void init_button_pio()
 }
 
 /* Our function that handles the key presses */
-void handle_key_press() {
+void handle_key_press_time() {
 	// Key 1
 	if (edge_capture == 2) {
-		reset_display();
+		increment_seconds(&top_row, &seconds);
+		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
+		alt_up_character_lcd_string(char_lcd_dev, top_row);
 	}
 	// Key 2
 	else if (edge_capture == 4) {
-		write_current_time_to_bot_row();
+		increment_minutes(&top_row, &minutes);
+		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
+		alt_up_character_lcd_string(char_lcd_dev, top_row);
 	}
 	// Key 3
 	else if (edge_capture == 8) {
-		half_second = 1;
-		init_timer_1(&half_second);
+		increment_hours(&top_row, &hours);
+		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
+		alt_up_character_lcd_string(char_lcd_dev, top_row);
 	}
 	
 	// Reset our edge capture back to 0
@@ -158,7 +163,13 @@ int main(void)
 	int * sw_ptr = (int *) SW_BASE;
 	int sw_values;
 	int oldvalue = 0x00000000;
-	int MASK = 0x00020000;
+	int MASK_17 = 0x00020000;
+	int MASK_1 = 0x00000002;
+	int MASK_0 = 0x00000001;
+	
+	int is_fast = 0; //use to tell other function if sped up, 0 = slow, 1 = fast
+	int clk_modify = 0; //if 0, clock isn't being changed, if 1 clock is being changed
+	int alarm_modify = 0; //if 0 alarm isn't being changed, if 1, alarm is being changed
 	
 	// Initialize the Timers
 	init_timer_0(&tenths);
@@ -174,10 +185,6 @@ int main(void)
 		// check the state of the context integer updated by various ISR functions	
 		// Act accordingly, which means
 		
-		// Handle if a key was pressed
-		if (edge_capture) {
-			handle_key_press();
-		}
 		
 		// Flash on and off our displays
 		if (half_second) {
@@ -202,13 +209,36 @@ int main(void)
 		
 		// Check SW17 for "Test Mode" - speed up or slow down
 		sw_values = *(sw_ptr);
-		if((sw_values & MASK) == 0x00020000 && oldvalue == 0x00000000){
+		if((sw_values & MASK_17) == 0x00020000 && oldvalue == 0x00000000){
 			speed_up();
-			oldvalue = sw_values & MASK;
-		} else if ((sw_values & MASK) == 0x00000000 && oldvalue == 0x00020000) { 
+			oldvalue = sw_values & MASK_17;
+			is_fast = 1;
+		} else if ((sw_values & MASK_17) == 0x00000000 && oldvalue == 0x00020000) { 
 			slow_down(); 
-			oldvalue = sw_values & MASK;
+			oldvalue = sw_values & MASK_17;
+			is_fast = 0;
 		}
+		
+		//Allow user to change the time if SW0 is up
+		if((sw_values & MASK_0) == 0x00000001){ clk_modify = 1;}
+		else{ clk_modify = 0;}
+		
+		//buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
+		if(clk_modify == 1 && alarm_modify == 0){
+			// Handle if a key was pressed
+			if (edge_capture) {
+				handle_key_press_time();
+			}
+		}
+		
+		//Allow user to change the alarm if SW1 is up
+		//buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
+/* 		if((sw_values & MASK_1) == 0x00000002 && clk_modify == 0){
+			// Handle if a key was pressed
+			if (edge_capture) {
+				handle_key_press_alarm();
+			}
+		} */
 		
 		// Update the clock
 		if (tenths != old_tenths) {

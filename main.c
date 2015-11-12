@@ -2,6 +2,7 @@
 #include "altera_avalon_pio_regs.h"
 #include "altera_avalon_timer_regs.h"
 #include <stdio.h>
+#include <string.h>
 #include "BSP/system.h"
 
 // Personal includes
@@ -43,15 +44,16 @@ alt_up_character_lcd_dev * char_lcd_dev;
 volatile int edge_capture;
 
 // Initialize our context variable
-volatile int hours = 14;
-volatile int minutes = 40;
-volatile int seconds = 0;
+int hours = 2;
+int minutes = 40;
+int seconds = 0;
 volatile int tenths = 0;
 
 // Initialize the alarm variables
-volatile int alarm_hours = 12;
-volatile int alarm_minutes = 00;
-volatile int alarm = 0; // if 0 then alarm off, if alarm = 1, then alarm is going off
+int alarm_hours = 12;
+int alarm_minutes = 00;
+volatile int alarm = 0; // if alarm = 0, then alarm is off 
+						// if alarm = 1, then alarm is going off
 
 // Our half second counter
 volatile int half_second = 0;
@@ -135,19 +137,19 @@ static void init_button_pio()
 void handle_key_press_time() {
 	// Key 1
 	if (edge_capture == 2) {
-		increment_seconds(&top_row, &seconds);
+		increment_seconds(top_row, &seconds);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 		alt_up_character_lcd_string(char_lcd_dev, top_row);
 	}
 	// Key 2
 	else if (edge_capture == 4) {
-		increment_minutes(&top_row, &minutes);
+		increment_minutes(top_row, &minutes);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 		alt_up_character_lcd_string(char_lcd_dev, top_row);
 	}
 	// Key 3
 	else if (edge_capture == 8) {
-		increment_hours(&top_row, &hours, am_pm_mode);
+		increment_hours(top_row, &hours, am_pm_mode);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 		alt_up_character_lcd_string(char_lcd_dev, top_row);
 	}
@@ -159,13 +161,13 @@ void handle_key_press_time() {
 void handle_key_press_alarm_set() {
 	// Key 2
 	if (edge_capture == 4) {
-		increment_minutes(&bot_row, &alarm_minutes);
+		increment_minutes(bot_row, &alarm_minutes);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
 		alt_up_character_lcd_string(char_lcd_dev, bot_row);
 	}
 	// Key 3
 	else if (edge_capture == 8) {
-		increment_hours(&bot_row, &alarm_hours, am_pm_mode);
+		increment_hours(bot_row, &alarm_hours, am_pm_mode);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
 		alt_up_character_lcd_string(char_lcd_dev, bot_row);
 	}
@@ -179,7 +181,7 @@ void handle_key_press_alarm() {
 	if (edge_capture == 2) {
 		int n = 0;
 		if(n < 5){
-			increment_minutes(&bot_row, &alarm_minutes);
+			increment_minutes(bot_row, &alarm_minutes);
 			n ++;
 		}
 		hex_off();
@@ -202,7 +204,7 @@ int main(void)
 	/* Initialize the character display */
 	alt_up_character_lcd_init(char_lcd_dev);
 
-	write_time_to_buffer(&top_row, seconds, minutes, hours);
+	write_time_to_buffer(top_row, seconds, minutes, hours, am_pm_mode);
 	
 	// Initialize the switches
 	int * sw_ptr = (int *) SW_BASE;
@@ -245,11 +247,15 @@ int main(void)
 			is_fast = 0;
 		}
 		
-		//Allow user to change the time if SW0 is up
-		if((sw_values & MASK_0) == 0x00000001){ clk_modify = 1;}
-		else{ clk_modify = 0;}
+		// Allow user to change the time if SW0 is up
+		if((sw_values & MASK_0) == 0x00000001){ 
+			clk_modify = 1;
+		}
+		else{ 
+			clk_modify = 0;
+		}
 		
-		//buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
+		// Buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
 		if(clk_modify == 1 && alarm_modify == 0 && alarm == 0){
 			// Handle if a key was pressed
 			if (edge_capture) {
@@ -257,7 +263,7 @@ int main(void)
 			}
 		}
 		
-		//Allow user to change the alarm if SW1 is up
+		// Allow user to change the alarm if SW1 is up
 		if((sw_values & MASK_1) == 0x00000002){
 			alarm_modify = 1;
 			alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
@@ -269,7 +275,7 @@ int main(void)
 			alt_up_character_lcd_string(char_lcd_dev, "                ");
 		}
 		
-		//buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
+		// Buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
  		if(alarm_modify == 1 && clk_modify == 0 && alarm == 0){
 			// Handle if a key was pressed
 			if (edge_capture) {
@@ -277,13 +283,13 @@ int main(void)
 			}
 		}
 		
-		//Check if alarm should go off yet
-		if(hours = alarm_hours && minutes == alarm_minutes && seconds == 0){ 
+		// Check if alarm should go off yet
+		if(hours == alarm_hours && minutes == alarm_minutes && seconds == 0){ 
 			alarm = 1; 
 			init_timer_1(&half_second);
 		}
 		
-		//while alarm is going off
+		// While alarm is going off
 		if( alarm == 1 ){
 			if (half_second % 2) {
 				// Turn hex on
@@ -296,7 +302,8 @@ int main(void)
 			if( edge_capture) {
 				handle_key_press_alarm();
 			}
-		} else { stop_timer_1(); }
+		} 
+		else { stop_timer_1(); }
 
 		// Check SW16 for "AM_PM" enable or "24" mode enable
 		//		If the switch is enabled, then we turn on 24 hour mode

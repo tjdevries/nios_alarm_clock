@@ -242,11 +242,10 @@ int main(void)
 		if(clk_modify == 1 && alarm_modify == 0){
 			// Handle if a key was pressed
 			if (edge_capture) {
-				handle_key_press_time();
+				handle_key_press_time(edge_capture);
 			}
 		}
 		
-
 		//Allow user to change the alarm if SW1 is up
 		//buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
 /* 		if((sw_values & MASK_1) == 0x00000002 && clk_modify == 0){

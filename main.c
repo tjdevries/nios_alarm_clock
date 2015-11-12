@@ -68,7 +68,9 @@ int year = 2015;
 // Variables for the AM_PM switch
 int am_pm_mode = 1;		// If this is 1, that means that AM_PM mode is enabled.
 						// If this is 0, then means that 24 hour mode is enabled.
-
+int is_am = 1;			// If this is 1, then it is the AM (default)
+						// If this is 0, then it is the PM
+						
 /* Functions used for updating displays */
 
 // For the Key 1 press

@@ -51,6 +51,7 @@ volatile int tenths = 0;
 // Initialize the alarm variables
 volatile int alarm_hours = 12;
 volatile int alarm_minutes = 00;
+volatile int alarm = 0; // if 0 then alarm off, if alarm = 1, then alarm is going off
 
 // Our half second counter
 volatile int half_second = 0;
@@ -155,7 +156,7 @@ void handle_key_press_time() {
 	edge_capture = 0;
 }
 
-void handle_key_press_alarm() {
+void handle_key_press_alarm_set() {
 	// Key 2
 	if (edge_capture == 4) {
 		increment_minutes(&bot_row, &alarm_minutes);
@@ -167,6 +168,27 @@ void handle_key_press_alarm() {
 		increment_hours(&bot_row, &alarm_hours);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
 		alt_up_character_lcd_string(char_lcd_dev, bot_row);
+	}
+	
+	// Reset our edge capture back to 0
+	edge_capture = 0;
+}
+
+void handle_key_press_alarm() {
+	// Key 1 then snooze
+	if (edge_capture == 2) {
+		int n = 0;
+		if(n < 5){
+			increment_minutes(&bot_row, &alarm_minutes);
+			n ++;
+		}
+		hex_off();
+		alarm = 0;
+	}
+	// Key 3 then turn off
+	else if (edge_capture == 8) {
+		alarm = 0;
+		hex_off();
 	}
 	
 	// Reset our edge capture back to 0
@@ -210,27 +232,6 @@ int main(void)
 		// check the state of the context integer updated by various ISR functions	
 		// Act accordingly, which means
 		
-		// Flash on and off our displays
-		if (half_second) {
-			// Odd numbers
-			if (half_second % 2) {
-				// Turn hex on
-				hex_on();
-			}
-			else {
-				// Turn hex off
-				hex_off();
-			}
-			
-			if (half_second == 7) {
-				half_second = 0;
-				// Turn hex off
-				hex_off();
-				// Turn off timer.
-				stop_timer_1();
-			}
-		}
-		
 		// Update the switch_values
 		sw_values = *(sw_ptr);
 		if((sw_values & MASK_17) == 0x00020000 && oldvalue == 0x00000000){
@@ -248,7 +249,7 @@ int main(void)
 		else{ clk_modify = 0;}
 		
 		//buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
-		if(clk_modify == 1 && alarm_modify == 0){
+		if(clk_modify == 1 && alarm_modify == 0 && alarm == 0){
 			// Handle if a key was pressed
 			if (edge_capture) {
 				handle_key_press_time();
@@ -268,12 +269,33 @@ int main(void)
 		}
 		
 		//buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
- 		if(alarm_modify == 1 && clk_modify == 0){
+ 		if(alarm_modify == 1 && clk_modify == 0 && alarm == 0){
 			// Handle if a key was pressed
 			if (edge_capture) {
-				handle_key_press_alarm();
+				handle_key_press_alarm_set();
 			}
 		}
+		
+		//Check if alarm should go off yet
+		if(hours = alarm_hours && minutes == alarm_minutes && seconds == 0){ 
+			alarm = 1; 
+			init_timer_1(&half_second);
+		}
+		
+		//while alarm is going off
+		if( alarm == 1 ){
+			if (half_second % 2) {
+				// Turn hex on
+				hex_on();
+			}
+			else {
+				// Turn hex off
+				hex_off();
+			}
+			if( edge_capture) {
+				handle_key_press_alarm();
+			}
+		} else { stop_timer_1(); }
 
 		// Check SW16 for "AM_PM" enable or "24" mode enable
 		//		If the switch is enabled, then we turn on 24 hour mode

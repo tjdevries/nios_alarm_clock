@@ -43,7 +43,7 @@ alt_up_character_lcd_dev * char_lcd_dev;
 volatile int edge_capture;
 
 // Initialize our context variable
-volatile int hours = 11;
+volatile int hours = 14;
 volatile int minutes = 40;
 volatile int seconds = 0;
 volatile int tenths = 0;
@@ -147,7 +147,7 @@ void handle_key_press_time() {
 	}
 	// Key 3
 	else if (edge_capture == 8) {
-		increment_hours(&top_row, &hours);
+		increment_hours(&top_row, &hours, am_pm_mode);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 		alt_up_character_lcd_string(char_lcd_dev, top_row);
 	}
@@ -165,7 +165,7 @@ void handle_key_press_alarm_set() {
 	}
 	// Key 3
 	else if (edge_capture == 8) {
-		increment_hours(&bot_row, &alarm_hours);
+		increment_hours(&bot_row, &alarm_hours, am_pm_mode);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
 		alt_up_character_lcd_string(char_lcd_dev, bot_row);
 	}
@@ -208,7 +208,8 @@ int main(void)
 	int * sw_ptr = (int *) SW_BASE;
 	int sw_values;
 	int oldvalue = 0x00000000;
-	 // Masks for individual switches
+	
+	// Masks for individual switches
 	int MASK_17 = 0x00020000;
 	int MASK_16 = 0x00010000;
 	int MASK_1 = 0x00000002;
@@ -311,7 +312,7 @@ int main(void)
 		// Update the clock
 		if (tenths != old_tenths) {
 			// Call the util.h function to update the time
-			update_time(top_row, &old_tenths, &tenths, &seconds, &minutes, &hours, &day, &month, &year, 0);
+			update_time(top_row, &old_tenths, &tenths, &seconds, &minutes, &hours, &day, &month, &year, am_pm_mode, 0);
 
 			// Write the updated time to the display
 			alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);

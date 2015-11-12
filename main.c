@@ -202,7 +202,7 @@ int main(void)
 	/* Initialize the character display */
 	alt_up_character_lcd_init(char_lcd_dev);
 
-	start(&top_row, seconds, minutes, hours);
+	write_time_to_buffer(&top_row, seconds, minutes, hours);
 	
 	// Initialize the switches
 	int * sw_ptr = (int *) SW_BASE;

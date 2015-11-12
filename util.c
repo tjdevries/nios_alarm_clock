@@ -9,7 +9,7 @@ int sec_2 = 11;
 int min_1 = 7;
 int min_2 = 8;
 	
-void start(char *time, int second, int minute, int hour){
+void write_time_to_buffer(char *time, int second, int minute, int hour){
 	// Write the initial items that we need to in to the display
 	// Write the hours back to the top_row
 	time[hours_1] = '0' + (hour - (hour % 10)) / 10;

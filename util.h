@@ -8,16 +8,16 @@
 #include "hex.h"
 #include "timers.h"
 
-char * update_time(int *old_tenths_ptr, volatile int *tenths_ptr, int *seconds_ptr, int *minutes_ptr, int *hours_ptr, int tenths_displayed);
-void update_hour();
-void update_min();
-void update_sec();
+void update_time(char * top_row, int *old_tenths_ptr, volatile int *tenths_ptr, int *seconds_ptr, int *minutes_ptr, int *hours_ptr, int *day, int *month, int *year, int tenths_displayed);
+void update_hour(char * top_row, int *hours_ptr, int *day, int *month, int *year);
+void update_min(char * top_row, int *minutes_ptr, int *hours_ptr, int *day, int *month, int *year);
+void update_sec(char * top_row, int *seconds_ptr, int *minutes_ptr, int *hours_ptr, int *day, int *month, int *year);
 
 void increment_hours(char *time, int *hours);
 void increment_minutes(char *time, int *minutes);
 void increment_seconds(char *time, int *seconds);
 
-void increment_date(int *month, int *day, int *year);
+void increment_date(int *day, int *month, int *year);
 void is_leap_year(int year);
 
 void is_in_array(int val, int *arr, int size);

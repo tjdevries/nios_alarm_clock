@@ -43,8 +43,8 @@ alt_up_character_lcd_dev * char_lcd_dev;
 volatile int edge_capture;
 
 // Initialize our context variable
-volatile int hours = 0;
-volatile int minutes = 0;
+volatile int hours = 11;
+volatile int minutes = 40;
 volatile int seconds = 0;
 volatile int tenths = 0;
 
@@ -58,6 +58,7 @@ int min_1 = 7;
 int min_2 = 8;
 int sec_1 = 10;
 int sec_2 = 11;
+
 // The tops and bottom rows of the display.
 //					hh:mm:ss
 char top_row[17] = "    12:00:00    ";
@@ -67,6 +68,10 @@ char bot_row[17];
 int month = 12;
 int day = 25;
 int year = 2015;
+
+// Variables for the AM_PM switch
+int am_pm_mode = 1;		// If this is 1, that means that AM_PM mode is enabled.
+						// If this is 0, then means that 24 hour mode is enabled.
 
 /* Functions used for updating displays */
 
@@ -128,7 +133,7 @@ static void init_button_pio()
 }
 
 /* Our function that handles the key presses */
-void handle_key_press_time() {
+void handle_key_press_time(int edge_capture) {
 	// Key 1
 	if (edge_capture == 2) {
 		increment_seconds(&top_row, &seconds);
@@ -158,12 +163,23 @@ int main(void)
 	char_lcd_dev = alt_up_character_lcd_open_dev ("/dev/LCD");
 	/* Initialize the character display */
 	alt_up_character_lcd_init(char_lcd_dev);
+	// Write the initial items that we need to in to the display
+	// Write the hours back to the top_row
+	top_row[hours_1] = '0' + (hours - (hours % 10)) / 10;
+	top_row[hours_2] = '0' + hours % 10;
+	// Write the new minutes out to the display 
+	top_row[min_1] = '0' + (minutes - (minutes % 10)) / 10;
+	top_row[min_2] = '0' + minutes % 10;
+	// Write out our new seconds to the display.
+	top_row[sec_1] = '0' + (seconds - (seconds % 10)) / 10;
+	top_row[sec_2] = '0' + seconds % 10;
 	
 	// Initialize the switches
 	int * sw_ptr = (int *) SW_BASE;
 	int sw_values;
 	int oldvalue = 0x00000000;
 	int MASK_17 = 0x00020000;
+	int MASK_16 = 0x00010000;
 	int MASK_1 = 0x00000002;
 	int MASK_0 = 0x00000001;
 	
@@ -184,7 +200,6 @@ int main(void)
 	while(1)  {
 		// check the state of the context integer updated by various ISR functions	
 		// Act accordingly, which means
-		
 		
 		// Flash on and off our displays
 		if (half_second) {
@@ -207,7 +222,7 @@ int main(void)
 			}
 		}
 		
-		// Check SW17 for "Test Mode" - speed up or slow down
+		// Update the switch_values
 		sw_values = *(sw_ptr);
 		if((sw_values & MASK_17) == 0x00020000 && oldvalue == 0x00000000){
 			speed_up();
@@ -231,6 +246,7 @@ int main(void)
 			}
 		}
 		
+
 		//Allow user to change the alarm if SW1 is up
 		//buttons increment the hours, minutes, and seconds, respectively to Key3, Key2, and Key1
 /* 		if((sw_values & MASK_1) == 0x00000002 && clk_modify == 0){
@@ -239,27 +255,24 @@ int main(void)
 				handle_key_press_alarm();
 			}
 		} */
+
+		// Check SW16 for "AM_PM" enable or "24" mode enable
+		//		If the switch is enabled, then we turn on 24 hour mode
+		//		Else we turn on AM / PM Mode
+		// TODO: Optimize so that it doesn't assign something every loop cycle. Maybe we could slim it down
+		if((sw_values & MASK_16) == MASK_16 ) {
+			am_pm_mode = 0;
+		}
+		else {
+			am_pm_mode = 1;
+		}
 		
 		// Update the clock
 		if (tenths != old_tenths) {
-			// Increment our seconds
-			if (tenths >= 10) {
-				hex_write_date(month, day, year);
-				increment_date(&month, &day, &year);
-				seconds++;
-				if (seconds == 60) {
-					minutes = (minutes + 1) % 60;
-					seconds = 0;
-					
-					// Write our minutes out to the top row
-					top_row[min_1] = '0' + (minutes - (minutes % 10)) / 10;
-					top_row[min_2] = '0' + minutes % 10;
-				}
-				top_row[sec_1] = '0' + (seconds - (seconds % 10)) / 10;
-				top_row[sec_2] = '0' + seconds % 10;
-				tenths = 0;
-			}
-			old_tenths = tenths;
+			// Call the util.h function to update the time
+			update_time(top_row, &old_tenths, &tenths, &seconds, &minutes, &hours, &day, &month, &year, 0);
+
+			// Write the updated time to the display
 			alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 			alt_up_character_lcd_string(char_lcd_dev, top_row);
 		}

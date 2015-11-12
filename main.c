@@ -58,6 +58,7 @@ int min_1 = 7;
 int min_2 = 8;
 int sec_1 = 10;
 int sec_2 = 11;
+
 // The tops and bottom rows of the display.
 //					hh:mm:ss
 char top_row[17] = "    12:00:00    ";
@@ -67,6 +68,10 @@ char bot_row[17];
 int month = 12;
 int day = 25;
 int year = 2015;
+
+// Variables for the AM_PM switch
+int am_pm_mode = 1;		// If this is 1, that means that AM_PM mode is enabled.
+						// If this is 0, then means that 24 hour mode is enabled.
 
 /* Functions used for updating displays */
 
@@ -128,7 +133,7 @@ static void init_button_pio()
 }
 
 /* Our function that handles the key presses */
-void handle_key_press() {
+void handle_key_press(int edge_capture) {
 	// Key 1
 	if (edge_capture == 2) {
 		reset_display();
@@ -159,6 +164,7 @@ int main(void)
 	int sw_values;
 	int oldvalue = 0x00000000;
 	int MASK = 0x00020000;
+	int MASK_16 = 0x00010000;
 	
 	// Initialize the Timers
 	init_timer_0(&tenths);
@@ -176,7 +182,7 @@ int main(void)
 		
 		// Handle if a key was pressed
 		if (edge_capture) {
-			handle_key_press();
+			handle_key_press(edge_capture);
 		}
 		
 		// Flash on and off our displays
@@ -200,14 +206,27 @@ int main(void)
 			}
 		}
 		
-		// Check SW17 for "Test Mode" - speed up or slow down
+		// Update the switch_values
 		sw_values = *(sw_ptr);
+		
+		// Check SW17 for "Test Mode" - speed up or slow down
 		if((sw_values & MASK) == 0x00020000 && oldvalue == 0x00000000){
 			speed_up();
 			oldvalue = sw_values & MASK;
 		} else if ((sw_values & MASK) == 0x00000000 && oldvalue == 0x00020000) { 
 			slow_down(); 
 			oldvalue = sw_values & MASK;
+		}
+		
+		// Check SW16 for "AM_PM" enable or "24" mode enable
+		//		If the switch is enabled, then we turn on 24 hour mode
+		//		Else we turn on AM / PM Mode
+		// TODO: Optimize so that it doesn't assign something every loop cycle. Maybe we could slim it down
+		if((sw_values & MASK_16) == MASK_16 ) {
+			am_pm_mode = 0;
+		}
+		else {
+			am_pm_mode = 1;
 		}
 		
 		// Update the clock

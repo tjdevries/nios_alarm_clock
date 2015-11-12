@@ -133,7 +133,7 @@ static void init_button_pio()
 }
 
 /* Our function that handles the key presses */
-void handle_key_press_time(int edge_capture) {
+void handle_key_press_time() {
 	// Key 1
 	if (edge_capture == 2) {
 		increment_seconds(&top_row, &seconds);
@@ -242,7 +242,7 @@ int main(void)
 		if(clk_modify == 1 && alarm_modify == 0){
 			// Handle if a key was pressed
 			if (edge_capture) {
-				handle_key_press_time(edge_capture);
+				handle_key_press_time();
 			}
 		}
 		

@@ -21,7 +21,7 @@ void update_time(char * top_row, int *old_tenths_ptr, volatile int *tenths_ptr, 
 }
 
 void increment_hours(char *time, int *hours){
-	(*hours) = (*hours + 1) % 12;
+	(*hours) = ((*hours) % 12) + 1;
 	time[4] = '0' + (*hours - (*hours % 10)) / 10; 
 	time[5] = '0' + *hours % 10;
 }

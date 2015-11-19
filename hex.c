@@ -1,15 +1,18 @@
 #include "hex.h"
 
+//turns all hex lights on
 void hex_on() {
 	IOWR_ALTERA_AVALON_PIO_DATA(SEVENSEG30_BASE, 0xFFFFFFFF);
 	IOWR_ALTERA_AVALON_PIO_DATA(SEVENSEG74_BASE, 0xFFFFFFFF);
 }
 
+//turns all hex lights off
 void hex_off() {
 	IOWR_ALTERA_AVALON_PIO_DATA(SEVENSEG30_BASE, 0x00000000);
 	IOWR_ALTERA_AVALON_PIO_DATA(SEVENSEG74_BASE, 0x00000000);
 }
 
+//converts numbers to seven seg
 uint8_t num_to_seven_seg(int num) {
 	unsigned int result = 0;
 	
@@ -27,6 +30,7 @@ uint8_t num_to_seven_seg(int num) {
 	return result;
 }
 
+//write date to hex display
 void hex_write_date(int month, int day, int year) {
 	// Get the digits for the month
 	int m1 = month % 10;

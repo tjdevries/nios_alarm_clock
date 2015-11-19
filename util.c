@@ -46,23 +46,27 @@ void update_time(char * top_row, int *old_tenths_ptr, volatile int *tenths_ptr, 
 	(*old_tenths_ptr) = (*tenths_ptr);
 }
 
+//increments the hours
 void increment_hours(char *time, int *hours_ptr, int am_pm_mode){
 	(*hours_ptr) = ((*hours_ptr) % 24) + 1;
 	handle_am_pm(time, hours_ptr, am_pm_mode);
 }
 
+//increments the mintues
 void increment_minutes(char *time, int *minutes_ptr){
 	(*minutes_ptr) = (*minutes_ptr + 1) % 60;
 	time[min_1] = '0' + (*minutes_ptr - (*minutes_ptr % 10)) / 10;
 	time[min_2] = '0' + *minutes_ptr % 10;
 }
 
+//increments the seconds
 void increment_seconds(char *time, int *seconds_ptr){
 	(*seconds_ptr) = (*seconds_ptr + 1) % 60;
 	time[sec_1] = '0' + (*seconds_ptr - (*seconds_ptr % 10)) / 10;
 	time[sec_2] = '0' + *seconds_ptr % 10;
 }
 
+//updates the top row with current hours
 void update_hour(char * top_row, int *hours_ptr, int *day, int *month, int *year, int am_pm_mode) {
 	// Set the maximum hours
 	// TODO: Insert AM/PM
@@ -81,6 +85,7 @@ void update_hour(char * top_row, int *hours_ptr, int *day, int *month, int *year
 	}
 }
 
+//updates teh top row with current minutes
 void update_min(char * top_row, int *minutes_ptr, int *hours_ptr, int *day, int *month, int *year, int am_pm_mode) {
 	// Set our maximum minutes
 	int min_max = 60;
@@ -101,6 +106,7 @@ void update_min(char * top_row, int *minutes_ptr, int *hours_ptr, int *day, int 
 	top_row[min_2] = '0' + (*minutes_ptr) % 10;
 }
 
+//updates top row with current seconds
 void update_sec(char * top_row, int *seconds_ptr, int *minutes_ptr, int *hours_ptr, int *day, int *month, int *year, int am_pm_mode) {
 	int sec_max = 60;
 	

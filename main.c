@@ -98,13 +98,6 @@ void reset_display() {
 	tenths = 0;
 }
 
-// For the Key 2 press
-void write_current_time_to_bot_row() {
-	alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
-	alt_up_character_lcd_string(char_lcd_dev, top_row);
-}
-
-
 /*		Key Setups 		*/
 static void handle_button_interrupts(void* context, alt_u32 id)
 {
@@ -137,21 +130,21 @@ static void init_button_pio()
 						handle_button_interrupts );
 }
 
-/* Our function that handles the key presses */
+/* Our function that handles the key presses for time setting*/
 void handle_key_press_time() {
-	// Key 1
+	// Key 1 increments the seconds
 	if (edge_capture == 2) {
 		increment_seconds(top_row, &seconds);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 		alt_up_character_lcd_string(char_lcd_dev, top_row);
 	}
-	// Key 2
+	// Key 2 increments the minutes
 	else if (edge_capture == 4) {
 		increment_minutes(top_row, &minutes);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
 		alt_up_character_lcd_string(char_lcd_dev, top_row);
 	}
-	// Key 3
+	// Key 3 increments the hours
 	else if (edge_capture == 8) {
 		increment_hours(top_row, &hours, am_pm_mode);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 0);
@@ -162,32 +155,31 @@ void handle_key_press_time() {
 	edge_capture = 0;
 }
 
+// handles key presses for setting the alarm time
 void handle_key_press_alarm_set() {
-	// Key 2
+	// Key 2 increments minutes
 	if (edge_capture == 4) {
 		increment_minutes(bot_row, &alarm_minutes);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
 		alt_up_character_lcd_string(char_lcd_dev, bot_row);
 	}
-	// Key 3
+	// Key 3 increments hours
 	else if (edge_capture == 8) {
 		increment_hours(bot_row, &alarm_hours, am_pm_mode);
 		alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
 		alt_up_character_lcd_string(char_lcd_dev, bot_row);
 	}
-	
 	// Reset our edge capture back to 0
 	edge_capture = 0;
 }
 
+//handle key press when alarm is going off
 void handle_key_press_alarm() {
-	// Key 1 then snooze
+	// Key 1 then snooze for one minute
 	if (edge_capture == 2) {
-		int n = 0;
-		if(n < 5){
-			increment_minutes(bot_row, &alarm_minutes);
-			n ++;
-		}
+		//1 minute because when you're sleeping 1 minute feels like 5
+		//and 5 minutes is a typical snooze time
+		increment_minutes(bot_row, &alarm_minutes);
 		hex_off();
 		alarm = 0;
 	}
@@ -196,7 +188,6 @@ void handle_key_press_alarm() {
 		alarm = 0;
 		hex_off();
 	}
-	
 	// Reset our edge capture back to 0
 	edge_capture = 0;
 }
@@ -208,6 +199,7 @@ int main(void)
 	/* Initialize the character display */
 	alt_up_character_lcd_init(char_lcd_dev);
 
+	//initially writes the start time of timer to lcd
 	write_time_to_buffer(top_row, seconds, minutes, hours, am_pm_mode);
 	
 	// Initialize the switches
@@ -241,11 +233,15 @@ int main(void)
 		
 		// Update the switch_values
 		sw_values = *(sw_ptr);
+		
+		//check if sw17 is up and if it is, then speed up the timer
 		if((sw_values & MASK_17) == 0x00020000 && oldvalue == 0x00000000){
 			speed_up();
 			oldvalue = sw_values & MASK_17;
 			is_fast = 1;
-		} else if ((sw_values & MASK_17) == 0x00000000 && oldvalue == 0x00020000) { 
+		}
+		//check if sw17 is down and if it is then slow down the timer
+		else if ((sw_values & MASK_17) == 0x00000000 && oldvalue == 0x00020000) { 
 			slow_down(); 
 			oldvalue = sw_values & MASK_17;
 			is_fast = 0;

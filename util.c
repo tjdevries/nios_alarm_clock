@@ -66,7 +66,7 @@ void increment_seconds(char *time, int *seconds_ptr){
 void update_hour(char * top_row, int *hours_ptr, int *day, int *month, int *year, int am_pm_mode) {
 	// Set the maximum hours
 	// TODO: Insert AM/PM
-	int hour_max = 25;
+	int hour_max = 24;
 
 	// Increment our hours variable
 	(*hours_ptr) = (*hours_ptr) + 1;
@@ -77,7 +77,7 @@ void update_hour(char * top_row, int *hours_ptr, int *day, int *month, int *year
 		increment_date(day, month, year);
 		
 		// Reset hours
-		(*hours_ptr) = 1;
+		(*hours_ptr) = 0;
 	}
 }
 
@@ -126,8 +126,14 @@ void handle_am_pm(char * time, int *hours_ptr, int am_pm_mode) {
 	//	This has to be updated every tenth of a second because the switch can happen at any time
 	//	If the hours are less than twelve or it isn't am_pm_mode, then we just write the time
 	if ( (*hours_ptr) <= 12 || (am_pm_mode == 0) ) { 
-		time[hours_1] = '0' + ((*hours_ptr) - ((*hours_ptr) % 10)) / 10;
-		time[hours_2] = '0' + (*hours_ptr) % 10;
+		if ( (*hours_ptr) == 0 ) {
+			time[hours_1] = '1';
+			time[hours_2] = '2';
+		}
+		else {
+			time[hours_1] = '0' + ((*hours_ptr) - ((*hours_ptr) % 10)) / 10;
+			time[hours_2] = '0' + (*hours_ptr) % 10;
+		}
 	} 
 	// Otherwise we write the time minus 12
 	else {
@@ -212,6 +218,8 @@ void increment_date(int *day, int *month, int *year) {
 			*day = 1;
 		}
 	}
+	
+	hex_write_date(*month, *day, *year);
 }
 
 int is_leap_year(int year) {

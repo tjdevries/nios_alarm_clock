@@ -48,8 +48,8 @@ alt_up_character_lcd_dev * char_lcd_dev;
 volatile int edge_capture;
 
 // Initialize our context variable
-int hours = 2;
-int minutes = 40;
+int hours = 22;
+int minutes = 55;
 int seconds = 0;
 volatile int tenths = 0;
 
@@ -199,8 +199,10 @@ int main(void)
 	/* Initialize the character display */
 	alt_up_character_lcd_init(char_lcd_dev);
 
-	//initially writes the start time of timer to lcd
+
+	// Initially writes the start time of timer to lcd
 	write_time_to_buffer(top_row, seconds, minutes, hours, am_pm_mode);
+	hex_write_date(month, day, year);
 	
 	// Initialize the switches
 	int * sw_ptr = (int *) SW_BASE;

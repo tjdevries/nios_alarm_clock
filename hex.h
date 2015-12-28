@@ -1,4 +1,4 @@
-#include "altera_avalon_pio_regs.h"
+#include "altera/altera_avalon_pio_regs.h"
 #include "BSP/system.h"
 #include <stdint.h>
 
